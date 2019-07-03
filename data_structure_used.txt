@@ -1,0 +1,18 @@
+# Mutable,ordered list, duplicates allowed, 
+# ...mostly one type element
+list   :  ['Milk' , 'Honey', 'Milk']
+
+
+# Mutable,unordered list, duplicates not allowed, 
+# ...mostly one type element
+Set : {'Milk', 'Honey'}
+
+
+# unMutable,ordered list, duplicates allowed, 
+# ...mixed type element
+Tuple : {'Milk', 'Honey'}
+
+
+# Mutable,unordered map, no duplicate keys allowed, 
+# ...mixed type element
+Dictionary : {'name : 'Milk' , 'n' : 2}
