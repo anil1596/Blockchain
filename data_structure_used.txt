@@ -16,3 +16,11 @@ Tuple : {'Milk', 'Honey'}
 # Mutable,unordered map, no duplicate keys allowed, 
 # ...mixed type element
 Dictionary : {'name : 'Milk' , 'n' : 2}
+
+# list comprehensions
+list = [1,2,3,4]
+doubled_list =  [e1*2 for e1 in list ]
+
+# Dictionary comprehensions
+stats = [('age',20) , ('weight', 69), ('qualifications', Btech)]
+dict_stats = {key: value for (key , value) in stats}
