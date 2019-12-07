@@ -1,13 +1,13 @@
 # Initializing our (empty) blockchain list
-genesis_block = {
+genesis_block = {               #dictionary is used here
     'previous_hash': '',
     'index': 0,
     'transaction': []
 }
-blockchain = [genesis_block]
-open_transactions = []
-owner = 'Neel'
-participants = {'Neel'}
+blockchain = [genesis_block]    #list is used here
+open_transactions = []          #list is used here
+owner = 'Neel'              
+participants = {'Neel'}         #set is used here
 
 
 def get_last_blockchain_value():
@@ -18,7 +18,7 @@ def get_last_blockchain_value():
 
 # This function accepts two arguments.
 # One required one (transaction_amount) and one optional one (last_transaction)
-# The optional one is optional because it has a default value => [1]
+# The optional one has a default value => [1]
 
 
 def add_transaction(recipient, sender=owner,  amount=1.0):
@@ -46,13 +46,30 @@ def mine_blocks():
     # for keys in last_block:
     #     value = last_block[keys]
     #     hashed_block += str(value)
-    block = {
+    #dictionary
+    block = {              
         'previous_hash': hashed_block,
         'index': len(blockchain),
         'transaction': open_transactions
     }
     blockchain.append(block)
+    return True
 
+def get_balance(participant):
+    #list of amounts sent by a participant in blockchain
+    tx_sender = [[tx['amount'] for tx in block['transaction'] if tx['sender']==participant] for block in blockchain]
+    amount_sent = 0
+    for tx in tx_sender:
+        if len(tx) > 0:
+            amount_sent+=tx[0]
+
+    tx_recipient = [[tx['amount'] for tx in block['transaction'] if tx['recipient']==participant] for block in blockchain]
+    amount_recieved = 0
+    for tx in tx_recipient:
+        if len(tx) > 0:
+            amount_recieved += tx[0]
+
+    return amount_recieved  - amount_sent 
 
 def get_transaction_value():
     """ Returns the input of the user (a new transaction amount) as a float. """
@@ -96,7 +113,7 @@ def verify_chain():
 
 
 while True:
-    print('Please choose')
+    print('\n Please choose')
     print('1: Add a new transaction value')
     print('2: Mine a new Block')
     print('3: Output the blockchain blocks')
@@ -109,12 +126,14 @@ while True:
         tx_data = get_transaction_value()
         # destructring tuple
         recipient, amount = tx_data
-        # Add transaction to the blockchain
-        add_transaction(recipient, amount)
+        """Add transaction to the blockchain, here explicitely mentioning the 'amount = amount' 
+           ...because amount is 3rd parameter in function definition"""
+        add_transaction(recipient, amount=amount)
         print(open_transactions)
 
     elif user_choice == '2':
-        mine_blocks()
+        if mine_blocks():
+            open_transactions = []
 
     elif user_choice == '3':
         print_blockchain_elements()
@@ -144,6 +163,9 @@ while True:
         print_blockchain_elements()
         print('Invalid blockchain!')
         break
-
+    
+    print('Balance of Anil :',get_balance('Anil'))
+else:
+    print('USER LEFT')
 
 print('Done!')
