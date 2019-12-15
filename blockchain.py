@@ -1,4 +1,4 @@
-import functools
+from functools import reduce
 import hashlib
 import json
 from collections import OrderedDict
@@ -98,10 +98,18 @@ def get_balance(participant):
     open_tx_sender = [tx['amount'] for tx in open_transactions if tx['sender'] == participant]
 
     tx_sender.append(open_tx_sender)
-    amount_sent = functools.reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else 0, tx_sender)
+    print(participant)
+    amount_sent = 0
+    for tx in tx_sender:
+        if len(tx) > 0:
+            amount_sent+=sum(tx)
+    # amount_sent = reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else 0, tx_sender)
 
+    # print(tx_sender)
     tx_recipient = [[tx['amount'] for tx in block['transaction'] if tx['recipient'] == participant] for block in blockchain]    
-    amount_recieved = 0#functools.reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else 0, tx_recipient)
+    # print(tx_recipient)
+    amount_recieved = 0
+    # amount_recieved = reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else 0, tx_recipient)
 
     for tx in tx_recipient:
         if len(tx) > 0:
