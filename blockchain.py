@@ -45,8 +45,8 @@ def load_data():
         open_transactions = json.loads(fileContent[1])
         updated_transactions = []
         for tx in open_transactions:
-            updated_transaction = [OrderedDict(
-                    [('sender',tx['sender']), ('recipient', tx['recipient']), ('amount',tx['amount'])])]
+            updated_transaction = OrderedDict(
+                    [('sender',tx['sender']), ('recipient', tx['recipient']), ('amount',tx['amount'])])
             updated_transactions.append(updated_transaction)
 
         open_transactions = updated_transactions            
