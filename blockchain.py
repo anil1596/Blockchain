@@ -4,60 +4,73 @@ from hash_util import hash_block, hash_string256
 import json
 
 MINING_REWARD = 10
-# Initializing our (empty) blockchain list
-genesis_block = {               #dictionary is used here
-    'previous_hash': '',
-    'index': 0,
-    'transactions': [],
-    'proof': 100
-}
-blockchain = [genesis_block]    #list is used here
+blockchain = []    #list is used here
 open_transactions = []          #list is used here
 owner = 'Neel'              
 participants = {'Neel'}         #set is used here
 
 #function to load data from text files
 def load_data():
-    with open('blockchain.txt', mode='r') as f:
-        fileContent = f.readlines()
-        global blockchain
-        global open_transactions   
-        """here [:-1] is used to neglect the '\n' at the end
-           ...and json.loads is used to load data in python object format"""
-        if len(fileContent) == 0:
-            return
+    global blockchain
+    global open_transactions 
+    try:
+        with open('blockchain.txt', mode='r') as f:
+            fileContent = f.readlines()
+              
+            """here [:-1] is used to neglect the '\n' at the end
+            ...and json.loads is used to load data in python object format"""
+            if len(fileContent) == 0:
+                return
+            #to remove '/n' from the last
+            blockchain = json.loads(fileContent[0][:-1])
+            #to get the Ordered Dict back from the data just got read from file
+            updated_blockchain = []
+            for block in blockchain:
+                updated_block = {
+                    'previous_hash': block['previous_hash'],
+                    'index': block['index'],
+                    'proof': block['proof'],
+                    'transactions': [OrderedDict(
+                        [('sender',tx['sender']), ('recipient', tx['recipient']), ('amount',tx['amount'])]) for tx in block['transactions']]
+                }
+                updated_blockchain.append(updated_block)
 
-        blockchain = json.loads(fileContent[0][:-1])
-        #to get the Ordered Dict back from the data just got read from file
-        updated_blockchain = []
-        for block in blockchain:
-            updated_block = {
-                'previous_hash': block['previous_hash'],
-                'index': block['index'],
-                'proof': block['proof'],
-                'transactions': [OrderedDict(
-                    [('sender',tx['sender']), ('recipient', tx['recipient']), ('amount',tx['amount'])]) for tx in block['transactions']]
-            }
-            updated_blockchain.append(updated_block)
+            blockchain = updated_blockchain
 
-        blockchain = updated_blockchain
+            open_transactions = json.loads(fileContent[1])
+            updated_transactions = []
+            for tx in open_transactions:
+                updated_transaction = OrderedDict(
+                        [('sender',tx['sender']), ('recipient', tx['recipient']), ('amount',tx['amount'])])
+                updated_transactions.append(updated_transaction)
 
-        open_transactions = json.loads(fileContent[1])
-        updated_transactions = []
-        for tx in open_transactions:
-            updated_transaction = OrderedDict(
-                    [('sender',tx['sender']), ('recipient', tx['recipient']), ('amount',tx['amount'])])
-            updated_transactions.append(updated_transaction)
-
-        open_transactions = updated_transactions            
-
+            open_transactions = updated_transactions            
+    except (IOError, IndexError):
+        print('File not found !!')
+        genesis_block = {               #dictionary is used here
+            'previous_hash': '',
+            'index': 0,
+            'transactions': [],
+            'proof': 100
+        }
+        blockchain = [genesis_block]    #list is used here
+        open_transactions = []          #list is used here
+    except ValueError:
+        print('Value assignment error')
+    except:
+        print('Wild Card catcher for errors')
+    finally:
+        print('cleanUp')    
 load_data()
 
 def save_data():
-    with open('blockchain.txt', mode='w') as f:
-        f.write(json.dumps(blockchain))
-        f.write('\n')
-        f.write(json.dumps(open_transactions))
+    try:
+        with open('blockchain.txt', mode='w') as f:
+            f.write(json.dumps(blockchain))
+            f.write('\n')
+            f.write(json.dumps(open_transactions))
+    except IOError:
+        print('Saving failed')
 
 def get_last_blockchain_value():
     """ Returns the last value of the current blockchain. """
