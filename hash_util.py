@@ -6,7 +6,10 @@ def hash_string256(msg):
 
 def hash_block(block):
     #returns the HEX string representing the hash
-    return hash_string256(json.dumps(block, sort_keys=True).encode())
+    hashable_block = block.__dict__.copy()
+    hashable_block['transactions'] = [tx.to_ordered_dict() for tx in hashable_block['transactions']]
+    # print(hashable_block)
+    return hash_string256(json.dumps(hashable_block, sort_keys=True).encode())
 
 
 
