@@ -35,6 +35,7 @@ class Wallet:
                 self.private_key = keys[1]
                 return True
         except (IOError, IndexError):
+            # self.generate_keys()
             print('Loading Wallet Failed')
             return False
 

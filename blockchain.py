@@ -64,7 +64,7 @@ class Blockchain:
                 open_transactions = json.loads(fileContent[1])
                 updated_transactions = []
                 for tx in open_transactions:
-                    updated_transaction = [Transaction(tx['sender'],tx['recipient'],tx['signature'],tx['amount'])]
+                    updated_transaction = Transaction(tx['sender'],tx['recipient'],tx['signature'],tx['amount'])
                     updated_transactions.append(updated_transaction)
                 self.__open_transactions = updated_transactions            
         except (IOError, IndexError):
@@ -74,7 +74,7 @@ class Blockchain:
         except:
             print('Wild Card catcher for errors')
         finally:
-            print('cleanUp')    
+            print('cleanUp after Loading execution (irrespective of done or not!)')    
     
 
     def save_data(self):
@@ -137,7 +137,8 @@ class Blockchain:
         #to copying by value not reference  
         copied_transactions = self.__open_transactions[:]
         for tx in copied_transactions:
-            if not Wallet.verify_transaction(tx.transaction):
+            # print(tx.transaction)
+            if not Wallet.verify_transaction(tx):
                 return None
         copied_transactions.append(reward_transaction)
         #dictionary
@@ -163,6 +164,7 @@ class Blockchain:
         tx_sender = [[tx.amount for tx in block.transactions
                     if tx.sender == participant] for block in self.__chain]
         #to get amount sent ... from open transactions that are not processed yet 
+        # print(self.__open_transactions)
         open_tx_sender = [tx.amount for tx in self.__open_transactions if tx.sender == participant]
 
         tx_sender.append(open_tx_sender)

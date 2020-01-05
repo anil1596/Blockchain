@@ -81,13 +81,24 @@ def add_transaction():
             'message' : 'Transaction Added Successfully',
             'transaction' :{
                 'sender' : wallet.public_key,
-                'recipient' : values['recipient'],
+                'recipient' : values['recipient '],
                 'amount' : values['amount'],
                 'signature' : signature
             },
             'funds' : blockchain.get_balance()
         }
         return jsonify(response), 201   
+
+@app.route('/transactions', methods=['GET'])
+def get_transactions():
+    transactions = blockchain.get_open_transaction()
+    dict_transactions = [tx.__dict__.copy() for tx in transactions]
+    # print(dict_transactions)
+    response = {
+        'message' : 'Fetched transactions successfully',
+        'transactions' : dict_transactions
+    }
+    return jsonify(response), 201
 
 @app.route('/balance', methods=['GET'])
 def get_balance():
