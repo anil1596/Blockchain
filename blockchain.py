@@ -16,9 +16,10 @@ class Blockchain:
         self.__chain = [genesis_block]
         #unhandled transactions
         self.__open_transactions = []
-        self.load_data()
         self.hosting_node = hosting_node_id
-
+        self.__peer_nodes = set()
+        self.load_data()
+         
     @property
     def chain(self):
         return self.__chain[:]
@@ -58,15 +59,18 @@ class Blockchain:
                     converted_tx = [Transaction(tx['sender'],tx['recipient'],tx['signature'],tx['amount']) for tx in block['transactions']]
                     updated_block = Block(block['index'], block['previous_hash'], converted_tx, block['proof'], block['timestamp'])
                     updated_blockchain.append(updated_block)
-
                 self.__chain = updated_blockchain
 
-                open_transactions = json.loads(fileContent[1])
+                open_transactions = json.loads(fileContent[1][:-1])
                 updated_transactions = []
                 for tx in open_transactions:
                     updated_transaction = Transaction(tx['sender'],tx['recipient'],tx['signature'],tx['amount'])
                     updated_transactions.append(updated_transaction)
-                self.__open_transactions = updated_transactions            
+                self.__open_transactions = updated_transactions 
+
+                peer_nodes = json.loads(fileContent[2])
+                self.__peer_nodes = set(peer_nodes)
+
         except (IOError, IndexError):
             print('Blockchain Record File not found !!')
         except ValueError:
@@ -85,6 +89,8 @@ class Blockchain:
                 f.write('\n')
                 savable_tx = [tx.__dict__ for tx in self.__open_transactions]
                 f.write(json.dumps(savable_tx))
+                f.write('\n')
+                f.write(json.dumps(list(self.__peer_nodes)))
         except IOError:
             print('Saving failed')
 
@@ -188,9 +194,23 @@ class Blockchain:
 
         return amount_recieved  - amount_sent 
 
+    def add_peer_node(self, node):
+        """Adds a new node to the peer node set
+            Arguments:
+                node: The node URL which should be added.
+        """
+        self.__peer_nodes.add(node)
+        self.save_data()
 
+    def remove_peer_node(self, node):
+        """Adds a new node to the peer node set
+            Arguments:
+                node: The node URL which should be removed.
+        """
+        self.__peer_nodes.discard(node)
 
-
-
+    def get_peer_nodes(self):
+        """returns the list of all peer nodes"""    
+        return list(self.__peer_nodes)
 
 
