@@ -66,7 +66,8 @@ def broadcast_transaction():
             'message' : 'Some data missing'
         }
         return jsonify(response), 400
-    success = blockchain.add_transaction(values['recipient'], values['sender'], values['signature'], values['amount'])
+    success = blockchain.add_transaction(
+        values['recipient'], values['sender'], values['signature'], values['amount'], is_receiving=True)
     if success:
         response = {
             'message' : 'Transaction Added Successfully',
@@ -83,6 +84,43 @@ def broadcast_transaction():
             'message' : 'Creating a Transaction Failed'
         }
         return jsonify(response), 500
+
+@app.route('/broadcast-block', methods=['POST'])
+def broadcast_block():
+    values = request.get_json()
+    if not values:
+        response = {
+            'message' : 'No Block data Found'
+        }
+        return jsonify(response), 400
+    if 'block' not in values:
+        response = {
+            'message' : 'Some Data is missing'
+        }
+        return jsonify(response), 400
+    block = values['block']
+    if block['index'] == blockchain.chain[-1].index + 1:
+        if blockchain.add_block(block):
+            response = {
+                'message' : 'Block Added Successfully'
+            }
+            return jsonify(response), 201
+        else:
+            response = {
+                'message' : 'Block Seems Invalid'
+            }
+            return jsonify(response), 500
+
+    elif block['index'] > blockchain.chain[-1].index:
+        response = {
+            'message' : 'Blockchain is updated one'
+        }
+        return jsonify(response), 400
+    elif block['index'] < blockchain.chain[-1].index:
+        response = {
+            'message' : 'Blockchain not updated one'
+        }
+        return jsonify(response), 409
 
 @app.route('/transaction', methods=['POST'])
 def add_transaction():
@@ -105,7 +143,7 @@ def add_transaction():
         }
         return jsonify(response), 400
     signature = wallet.sign_transaction(wallet.public_key, values['recipient'], values['amount'])
-    if not blockchain.add_transaction(values['recipient'], wallet.public_key, signature, values['amount'], is_receiving = True):
+    if not blockchain.add_transaction(values['recipient'], wallet.public_key, signature, values['amount']):
         response = {
             'message' : 'Add transaction Failed'
         }
@@ -167,7 +205,7 @@ def mine():
         # print('$$$' ,dict_block)
         dict_block['transactions'] = [tx.__dict__   for tx in dict_block['transactions']]
         response = {
-            'message' : 'Block added Successfully',
+            'message' : 'Block Mined Successfully',
             'block' : dict_block,
             'funds' : blockchain.get_balance()
         }    
@@ -221,7 +259,8 @@ def get_nodes():
     response = {
         'all_nodes' : blockchain.get_peer_nodes()
     }
-    return jsonify(response), 201
+    return jsonify(response), 200
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

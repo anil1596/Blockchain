@@ -124,17 +124,21 @@ class Blockchain:
         if self.public_key == None:
             return False
         transaction = Transaction(sender, recipient, signature, amount)
-        if(Verification.verify_transaction(transaction, self.get_balance)):
+        print(Verification.verify_transaction(transaction, self.get_balance))
+        if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
             self.save_data()
             if not is_receiving:
                 for node in self.__peer_nodes:
                     url = 'http://{}/broadcast-transaction'.format(node)
+                    print('Broadcasting transaction to : ' + url)
                     try:
                         response = requests.post(url, json = {'sender' : sender, 'recipient' : recipient, 'amount' : amount, 'signature' : signature})
                         if response.status_code == 400 or response.status_code == 500 :
                             print('Transaction Declined, needs Resolving')
                             return False 
+                        elif response.status_code == 200 or response.status_code == 201:
+                            print('transaction successfully added to : {}'.format(node))
                     except  requests.exceptions.ConnectionError:
                         continue
             return True
@@ -164,7 +168,40 @@ class Blockchain:
         self.__chain.append(block)
         self.__open_transactions = []
         self.save_data()
+        for node in self.__peer_nodes:
+            url = 'http://{}/broadcast-block'.format(node)
+            print('boadcasting block addtion to : ' + url)
+            converted_block = block.__dict__.copy()
+            converted_block['transactions'] = [tx.__dict__ for tx in converted_block['transactions']]
+            try:
+                response = requests.post(url, json={'block': converted_block}) 
+                if response.status_code == 400 or response.status_code == 500 :
+                            print('Block adding failed, needs Resolving')
+            except requests.exceptions.ConnectionError:
+                continue
+
         return block
+
+    def add_block(self, block):
+        transactions = [Transaction(tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transactions']]
+        proof_is_valid = Verification.valid_proof(transactions[:-1], block['previous_hash'], block['proof'])
+        hash_matches = hash_block(self.__chain[-1]) == block['previous_hash']
+        if not proof_is_valid or not hash_matches:
+            print('Block cannot be added')
+            return False
+        converted_block = Block(
+            block['index'], block['previous_hash'], transactions, block['proof'], block['timestamp'])
+        self.__chain.append(converted_block)
+        stored_transactions = self.__open_transactions[:]
+        for itx in block['transactions']:
+            for opentx in stored_transactions:
+                if opentx.sender == itx['sender'] and opentx.recipient == itx['recipient'] and opentx.amount == itx['amount'] and opentx.signature == itx['signature']:
+                    try:
+                        self.__open_transactions.remove(opentx)
+                    except ValueError:
+                        print('Item was already removed')
+        self.save_data()
+        return True
 
     def proof_of_work(self):
         last_block = self.__chain[-1]

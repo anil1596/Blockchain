@@ -306,6 +306,7 @@
                         .then(function(response) {
                             vm.error = null;
                             vm.success = response.data.message;
+                            console.log('mining log : ');
                             console.log(response.data);
                             vm.funds = response.data.funds;
                         })
