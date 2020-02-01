@@ -20,6 +20,7 @@ class Blockchain:
         self.public_key = public_key
         self.node_id = node_id
         self.__peer_nodes = set()
+        self.resolve_conflicts = False 
         self.load_data()
          
     @property
@@ -176,7 +177,9 @@ class Blockchain:
             try:
                 response = requests.post(url, json={'block': converted_block}) 
                 if response.status_code == 400 or response.status_code == 500 :
-                            print('Block adding failed, needs Resolving')
+                    print('Block adding failed, needs Resolving')
+                if response.status_code == 409:
+                    self.resolve_conflicts = True
             except requests.exceptions.ConnectionError:
                 continue
 
@@ -266,4 +269,27 @@ class Blockchain:
         """returns the list of all peer nodes"""    
         return list(self.__peer_nodes)
 
+    def resolve(self):
+        winner_chain = self.chain
+        replace = False
+        for node in self.__peer_nodes:
+            url = 'http://{}/chain'.format(node)
+            try:
+                response = requests.get(url)
+                node_chain = response.json()
+                node_chain = [Block(block['index'], block['previous_hash'], [Transaction(tx['sender'],tx['recipient'],tx['signature'],tx['amount']) for tx in block['transactions']], 
+                                block['proof'], block['timestamp']) for block in node_chain] 
+                node_chain_length = len(node_chain)
+                local_chain_length = len(self.chain)
+                if node_chain_length > local_chain_length and Verification.verify_chain(node_chain):
+                    winner_chain = node_chain
+                    replace = True
+            except requests.exceptions.ConnectionError:
+                continue
+            self.resolve_conflicts = False
+            self.chain = winner_chain
+            if replace:
+                #need to remove open transactions because local chain was obsolate
+                self.__open_transactions = []
+        return replace
 

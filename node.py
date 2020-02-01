@@ -109,16 +109,19 @@ def broadcast_block():
             response = {
                 'message' : 'Block Seems Invalid'
             }
-            return jsonify(response), 500
+            return jsonify(response), 409
 
     elif block['index'] > blockchain.chain[-1].index:
+        #local blockchain needs to be updated
         response = {
-            'message' : 'Blockchain is updated one'
+            'message' : 'Blockchain seems different from LOCAL Blockchain'
         }
-        return jsonify(response), 400
+        blockchain.resolve_conflicts = True 
+        return jsonify(response), 200
     elif block['index'] < blockchain.chain[-1].index:
+        print('Blockchain Seems to be shorter one!!')
         response = {
-            'message' : 'Blockchain not updated one'
+            'message' : 'Blockchain seems to be shorter one'
         }
         return jsonify(response), 409
 
@@ -138,7 +141,7 @@ def add_transaction():
         return jsonify(response), 400
     required_fields = ['recipient', 'amount']
     if not all(field in values for field in required_fields):
-        response = {
+        response = { 
             'message' : 'Required Data is missing'
         }
         return jsonify(response), 400
@@ -200,6 +203,12 @@ def get_chain():
 @app.route('/mine', methods=['POST'])
 def mine():
     block = blockchain.mine_blocks()
+    #to check if any conflict aroused while mining the block
+    if blockchain.resolve_conflicts :
+        response = {
+                 'message':'Need to resolve Conflicts, Block cannot be added'
+            }
+        return jsonify(response), 409  
     if block != None:
         dict_block = block.__dict__.copy()
         # print('$$$' ,dict_block)
@@ -259,6 +268,19 @@ def get_nodes():
     response = {
         'all_nodes' : blockchain.get_peer_nodes()
     }
+    return jsonify(response), 200
+
+@app.route('/resolve-conflicts', methods=['POST'])
+def resolve_conflicts():
+    replaced = blockchain.resolve()
+    if replaced:
+        response = {
+            'message' : 'Chain was updated'
+        }
+    else :
+        response = {
+            'message' : 'Local Chain kept'
+        }
     return jsonify(response), 200
 
 
