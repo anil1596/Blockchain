@@ -2,7 +2,12 @@
  It keep tracks of the transactions happening in-between the users in the peer network and user gets rewarded for the each of the new block being mined. Transations are being tracked using  public key of the sender and recipient, implemented using [RSA](https://pycryptodome.readthedocs.io/en/latest/src/public_key/rsa.html). 
 
 ## How the things look on the browser
-1: 
+1: Main Interface (to make new transaction, load/store wallet, load transactions/blockchain)
+  ![alt text](https://github.com/anil1596/Blockchain/blob/master/images/initial.png "Main page to create/load wallet, load transactions, to make new transaction")
+
+2: Handle to add new peer nodes into the network.
+  ![alt text](https://github.com/anil1596/Blockchain/blob/master/images/peer_page.png "Page to add peer node")
+
 
 ## Show me how to run this thing!
 
